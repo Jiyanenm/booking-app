@@ -12,7 +12,9 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  MenuItem
+  MenuItem,
+  Drawer,
+  useMediaQuery
 } from "@mui/material";
 
 import { initializeApp } from "firebase/app";
@@ -50,23 +52,40 @@ const db = getFirestore(app);
 /* ================= LOGIN ================= */
 function LoginPage({ form, setForm, handleLogin }) {
   return (
-    <Box sx={{ width: "100vw", height: "100vh", display: "flex", justifyContent: "center", alignItems: "center", background: "#f5f7fb" }}>
-      <Card sx={{ p: 4, width: 380 }}>
+    <Box
+      sx={{
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "#f5f7fb",
+        px: 2
+      }}
+    >
+      <Card sx={{ p: 4, width: "100%", maxWidth: 380 }}>
         <Typography variant="h5" fontWeight={700} mb={2}>
           Login
         </Typography>
 
-        <TextField fullWidth label="Email" margin="normal"
+        <TextField
+          fullWidth
+          label="Email"
+          margin="normal"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
         />
 
-        <TextField fullWidth label="Password" type="password" margin="normal"
+        <TextField
+          fullWidth
+          label="Password"
+          type="password"
+          margin="normal"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
 
-        <Button fullWidth variant="contained" onClick={handleLogin}>
+        <Button fullWidth variant="contained" sx={{ mt: 2 }} onClick={handleLogin}>
           Login
         </Button>
       </Card>
@@ -80,15 +99,17 @@ function Dashboard({ bookings = [] }) {
 
   return (
     <Box>
-      <Typography variant="h4" mb={2}>Dashboard</Typography>
+      <Typography variant="h4" mb={2}>
+        Dashboard
+      </Typography>
 
-      <Box display="flex" gap={2}>
-        <Card sx={{ p: 3, flex: 1 }}>
+      <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }} gap={2}>
+        <Card sx={{ p: 3 }}>
           <Typography>Total Bookings</Typography>
           <Typography variant="h4">{bookings.length}</Typography>
         </Card>
 
-        <Card sx={{ p: 3, flex: 1 }}>
+        <Card sx={{ p: 3 }}>
           <Typography>Total Revenue</Typography>
           <Typography variant="h4">R {revenue}</Typography>
         </Card>
@@ -129,26 +150,25 @@ function CustomersPage({ customers = [] }) {
 
       {/* FORM */}
       <Card sx={{ p: 3, mb: 3 }}>
-        <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={2}>
+        <Box
+          display="grid"
+          gridTemplateColumns={{ xs: "1fr", md: "repeat(3, 1fr)" }}
+          gap={2}
+        >
           <TextField label="First Name" value={form.firstName}
-            onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
 
           <TextField label="Last Name" value={form.lastName}
-            onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
 
           <TextField label="Phone" value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, phone: e.target.value })} />
 
           <TextField label="Service" value={form.serviceType}
-            onChange={(e) => setForm({ ...form, serviceType: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, serviceType: e.target.value })} />
 
           <TextField label="Price" value={form.price}
-            onChange={(e) => setForm({ ...form, price: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, price: e.target.value })} />
 
           <Button variant="contained" onClick={addCustomer}>
             Add
@@ -157,7 +177,7 @@ function CustomersPage({ customers = [] }) {
       </Card>
 
       {/* TABLE */}
-      <Card sx={{ p: 2 }}>
+      <Card sx={{ overflowX: "auto" }}>
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -192,26 +212,21 @@ function CustomersPage({ customers = [] }) {
         <Card sx={{ p: 3, mt: 3 }}>
           <Typography mb={2}>Edit Customer</Typography>
 
-          <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={2}>
+          <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "repeat(3, 1fr)" }} gap={2}>
             <TextField value={editing.firstName}
-              onChange={(e) => setEditing({ ...editing, firstName: e.target.value })}
-            />
+              onChange={(e) => setEditing({ ...editing, firstName: e.target.value })} />
 
             <TextField value={editing.lastName}
-              onChange={(e) => setEditing({ ...editing, lastName: e.target.value })}
-            />
+              onChange={(e) => setEditing({ ...editing, lastName: e.target.value })} />
 
             <TextField value={editing.phone}
-              onChange={(e) => setEditing({ ...editing, phone: e.target.value })}
-            />
+              onChange={(e) => setEditing({ ...editing, phone: e.target.value })} />
 
             <TextField value={editing.serviceType}
-              onChange={(e) => setEditing({ ...editing, serviceType: e.target.value })}
-            />
+              onChange={(e) => setEditing({ ...editing, serviceType: e.target.value })} />
 
             <TextField value={editing.price}
-              onChange={(e) => setEditing({ ...editing, price: e.target.value })}
-            />
+              onChange={(e) => setEditing({ ...editing, price: e.target.value })} />
 
             <Button variant="contained" onClick={updateCustomer}>
               Save
@@ -242,10 +257,9 @@ function BookingsPage({ bookings = [], customers = [] }) {
 
   const calcDays = (from, to) => {
     if (!from || !to) return 0;
-    return (new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24) + 1;
+    return (new Date(to) - new Date(from)) / 86400000 + 1;
   };
 
-  /* ================= ADD ================= */
   const addBooking = async () => {
     const days = calcDays(form.dateFrom, form.dateTo);
     const totalPrice = Number(form.price || 0) * days;
@@ -270,12 +284,10 @@ function BookingsPage({ bookings = [], customers = [] }) {
     });
   };
 
-  /* ================= DELETE ================= */
   const deleteBooking = async (id) => {
     await deleteDoc(doc(db, "bookings", id));
   };
 
-  /* ================= UPDATE ================= */
   const updateBooking = async () => {
     const days = calcDays(editing.dateFrom, editing.dateTo);
     const totalPrice = Number(editing.price || 0) * days;
@@ -291,88 +303,48 @@ function BookingsPage({ bookings = [], customers = [] }) {
 
   return (
     <Box>
-      <Typography variant="h4" mb={2}>
-        Bookings
-      </Typography>
+      <Typography variant="h4" mb={2}>Bookings</Typography>
 
-      {/* ================= FORM ================= */}
+      {/* FORM */}
       <Card sx={{ p: 3, mb: 3 }}>
-        <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(200px, 1fr))" gap={2}>
-
-          {/* CUSTOMER SELECT */}
-          <TextField
-            select
-            label="Select Customer (Booked)"
+        <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "repeat(3, 1fr)" }} gap={2}>
+          <TextField select label="Customer"
             value={form.customerId}
-            onChange={(e) =>
-              setForm({ ...form, customerId: e.target.value })
-            }
-          >
-            {customers.map((c) => (
+            onChange={(e) => setForm({ ...form, customerId: e.target.value })}>
+            {customers.map(c => (
               <MenuItem key={c.id} value={c.id}>
                 {c.firstName} {c.lastName}
               </MenuItem>
             ))}
           </TextField>
 
-          {/* MANUAL FIELDS */}
-          <TextField
-            label="Full Name"
+          <TextField label="Full Name"
             value={form.fullName}
-            onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
 
-          <TextField
-            label="Contact Number"
+          <TextField label="Contact"
             value={form.contactNumber}
-            onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, contactNumber: e.target.value })} />
 
-          <TextField
-            label="Address"
+          <TextField label="Address"
             value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, address: e.target.value })} />
 
-          <TextField
-            label="Email"
+          <TextField label="Email"
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, email: e.target.value })} />
 
-          <TextField
-            label="Service Type"
-            value={form.serviceType}
-            onChange={(e) => setForm({ ...form, serviceType: e.target.value })}
-          />
-
-          <TextField
-            label="Price per Day"
+          <TextField label="Price"
             value={form.price}
-            onChange={(e) => setForm({ ...form, price: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, price: e.target.value })} />
 
-          <TextField
-            type="date"
-            label="From"
-            InputLabelProps={{ shrink: true }}
+          <TextField type="date" InputLabelProps={{ shrink: true }}
             value={form.dateFrom}
-            onChange={(e) => setForm({ ...form, dateFrom: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, dateFrom: e.target.value })} />
 
-          <TextField
-            type="date"
-            label="To"
-            InputLabelProps={{ shrink: true }}
+          <TextField type="date" InputLabelProps={{ shrink: true }}
             value={form.dateTo}
-            onChange={(e) => setForm({ ...form, dateTo: e.target.value })}
-          />
-
-          <TextField
-            label="Notes"
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          />
+            onChange={(e) => setForm({ ...form, dateTo: e.target.value })} />
 
           <Button variant="contained" onClick={addBooking}>
             Add Booking
@@ -380,13 +352,12 @@ function BookingsPage({ bookings = [], customers = [] }) {
         </Box>
       </Card>
 
-      {/* ================= TABLE ================= */}
-      <Card sx={{ p: 2 }}>
+      {/* TABLE */}
+      <Card sx={{ overflowX: "auto" }}>
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Customer</TableCell>
-              <TableCell>Full Name</TableCell>
+              <TableCell>Name</TableCell>
               <TableCell>Contact</TableCell>
               <TableCell>Service</TableCell>
               <TableCell>Dates</TableCell>
@@ -396,9 +367,8 @@ function BookingsPage({ bookings = [], customers = [] }) {
           </TableHead>
 
           <TableBody>
-            {bookings.map((b) => (
+            {bookings.map(b => (
               <TableRow key={b.id}>
-                <TableCell>{b.customerId}</TableCell>
                 <TableCell>{b.fullName}</TableCell>
                 <TableCell>{b.contactNumber}</TableCell>
                 <TableCell>{b.serviceType}</TableCell>
@@ -415,45 +385,29 @@ function BookingsPage({ bookings = [], customers = [] }) {
         </Table>
       </Card>
 
-      {/* ================= EDIT ================= */}
+      {/* EDIT */}
       {editing && (
         <Card sx={{ p: 3, mt: 3 }}>
           <Typography mb={2}>Edit Booking</Typography>
 
-          <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(200px, 1fr))" gap={2}>
+          <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "repeat(3, 1fr)" }} gap={2}>
+            <TextField value={editing.fullName}
+              onChange={(e) => setEditing({ ...editing, fullName: e.target.value })} />
 
-            <TextField
-              value={editing.fullName}
-              onChange={(e) => setEditing({ ...editing, fullName: e.target.value })}
-            />
+            <TextField value={editing.contactNumber}
+              onChange={(e) => setEditing({ ...editing, contactNumber: e.target.value })} />
 
-            <TextField
-              value={editing.contactNumber}
-              onChange={(e) => setEditing({ ...editing, contactNumber: e.target.value })}
-            />
+            <TextField value={editing.address}
+              onChange={(e) => setEditing({ ...editing, address: e.target.value })} />
 
-            <TextField
-              value={editing.address}
-              onChange={(e) => setEditing({ ...editing, address: e.target.value })}
-            />
+            <TextField value={editing.email}
+              onChange={(e) => setEditing({ ...editing, email: e.target.value })} />
 
-            <TextField
-              value={editing.email}
-              onChange={(e) => setEditing({ ...editing, email: e.target.value })}
-            />
-
-            <TextField
-              value={editing.serviceType}
-              onChange={(e) => setEditing({ ...editing, serviceType: e.target.value })}
-            />
-
-            <TextField
-              value={editing.price}
-              onChange={(e) => setEditing({ ...editing, price: e.target.value })}
-            />
+            <TextField value={editing.price}
+              onChange={(e) => setEditing({ ...editing, price: e.target.value })} />
 
             <Button variant="contained" onClick={updateBooking}>
-              Save Changes
+              Save
             </Button>
           </Box>
         </Card>
@@ -461,25 +415,50 @@ function BookingsPage({ bookings = [], customers = [] }) {
     </Box>
   );
 }
-/* ================= LAYOUT ================= */
-function Layout({ children, handleLogout }) {
-  const navigate = useNavigate();
 
+/* ================= APP ================= */
+function Layout({ children, handleLogout }) {
   return (
-    <Box display="flex">
-      <Box width={220} bgcolor="#111" color="#fff" minHeight="100vh">
-        <Button fullWidth onClick={() => navigate("/")}>Dashboard</Button>
-        <Button fullWidth onClick={() => navigate("/customers")}>Customers</Button>
-        <Button fullWidth onClick={() => navigate("/bookings")}>Bookings</Button>
-        <Button fullWidth onClick={handleLogout}>Logout</Button>
+    <Box display="flex" minHeight="100vh">
+      {/* SIDEBAR */}
+      <Box
+        sx={{
+          width: 220,
+          bgcolor: "#111",
+          color: "#fff",
+          display: "flex",
+          flexDirection: "column",
+          p: 1
+        }}
+      >
+        <Typography sx={{ p: 2, fontWeight: "bold" }}>
+          SaaS App
+        </Typography>
+
+        <Button sx={{ color: "#fff" }} onClick={() => (window.location.href = "/")}>
+          Dashboard
+        </Button>
+
+        <Button sx={{ color: "#fff" }} onClick={() => (window.location.href = "/customers")}>
+          Customers
+        </Button>
+
+        <Button sx={{ color: "#fff" }} onClick={() => (window.location.href = "/bookings")}>
+          Bookings
+        </Button>
+
+        <Button sx={{ color: "red" }} onClick={handleLogout}>
+          Logout
+        </Button>
       </Box>
 
-      <Box flex={1} p={3}>{children}</Box>
+      {/* MAIN CONTENT */}
+      <Box sx={{ flex: 1, p: 2, background: "#f5f7fb" }}>
+        {children}
+      </Box>
     </Box>
   );
 }
-
-/* ================= APP ================= */
 function AppContent() {
   const [user, setUser] = useState(null);
   const [form, setForm] = useState({ email: "", password: "" });
