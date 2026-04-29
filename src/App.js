@@ -227,41 +227,58 @@ function CustomersPage({ customers = [] }) {
 function BookingsPage({ bookings = [], customers = [] }) {
   const [form, setForm] = useState({
     customerId: "",
-    customerName: "",
+    fullName: "",
+    contactNumber: "",
+    address: "",
+    email: "",
     serviceType: "",
     price: "",
     dateFrom: "",
-    dateTo: ""
+    dateTo: "",
+    notes: ""
   });
 
   const [editing, setEditing] = useState(null);
 
-  const calcDays = (from, to) =>
-    (new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24) + 1;
+  const calcDays = (from, to) => {
+    if (!from || !to) return 0;
+    return (new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24) + 1;
+  };
 
+  /* ================= ADD ================= */
   const addBooking = async () => {
     const days = calcDays(form.dateFrom, form.dateTo);
     const totalPrice = Number(form.price || 0) * days;
 
-    await addDoc(collection(db, "bookings"), { ...form, days, totalPrice });
+    await addDoc(collection(db, "bookings"), {
+      ...form,
+      days,
+      totalPrice
+    });
 
     setForm({
       customerId: "",
-      customerName: "",
+      fullName: "",
+      contactNumber: "",
+      address: "",
+      email: "",
       serviceType: "",
       price: "",
       dateFrom: "",
-      dateTo: ""
+      dateTo: "",
+      notes: ""
     });
   };
 
+  /* ================= DELETE ================= */
   const deleteBooking = async (id) => {
     await deleteDoc(doc(db, "bookings", id));
   };
 
+  /* ================= UPDATE ================= */
   const updateBooking = async () => {
     const days = calcDays(editing.dateFrom, editing.dateTo);
-    const totalPrice = Number(editing.price) * days;
+    const totalPrice = Number(editing.price || 0) * days;
 
     await updateDoc(doc(db, "bookings", editing.id), {
       ...editing,
@@ -274,40 +291,87 @@ function BookingsPage({ bookings = [], customers = [] }) {
 
   return (
     <Box>
-      <Typography variant="h4" mb={2}>Bookings</Typography>
+      <Typography variant="h4" mb={2}>
+        Bookings
+      </Typography>
 
-      {/* FORM */}
+      {/* ================= FORM ================= */}
       <Card sx={{ p: 3, mb: 3 }}>
-        <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={2}>
+        <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(200px, 1fr))" gap={2}>
+
+          {/* CUSTOMER SELECT */}
           <TextField
             select
-            label="Customer"
+            label="Select Customer (Booked)"
             value={form.customerId}
-            onChange={(e) => {
-              const selected = customers.find(c => c.id === e.target.value);
-
-              setForm({
-                ...form,
-                customerId: e.target.value,
-                customerName: selected ? `${selected.firstName} ${selected.lastName}` : "",
-                serviceType: selected?.serviceType || "",
-                price: selected?.price || ""
-              });
-            }}
+            onChange={(e) =>
+              setForm({ ...form, customerId: e.target.value })
+            }
           >
-            {customers.map(c => (
+            {customers.map((c) => (
               <MenuItem key={c.id} value={c.id}>
                 {c.firstName} {c.lastName}
               </MenuItem>
             ))}
           </TextField>
 
-          <TextField type="date" value={form.dateFrom}
+          {/* MANUAL FIELDS */}
+          <TextField
+            label="Full Name"
+            value={form.fullName}
+            onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+          />
+
+          <TextField
+            label="Contact Number"
+            value={form.contactNumber}
+            onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
+          />
+
+          <TextField
+            label="Address"
+            value={form.address}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
+          />
+
+          <TextField
+            label="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
+
+          <TextField
+            label="Service Type"
+            value={form.serviceType}
+            onChange={(e) => setForm({ ...form, serviceType: e.target.value })}
+          />
+
+          <TextField
+            label="Price per Day"
+            value={form.price}
+            onChange={(e) => setForm({ ...form, price: e.target.value })}
+          />
+
+          <TextField
+            type="date"
+            label="From"
+            InputLabelProps={{ shrink: true }}
+            value={form.dateFrom}
             onChange={(e) => setForm({ ...form, dateFrom: e.target.value })}
           />
 
-          <TextField type="date" value={form.dateTo}
+          <TextField
+            type="date"
+            label="To"
+            InputLabelProps={{ shrink: true }}
+            value={form.dateTo}
             onChange={(e) => setForm({ ...form, dateTo: e.target.value })}
+          />
+
+          <TextField
+            label="Notes"
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
           />
 
           <Button variant="contained" onClick={addBooking}>
@@ -316,25 +380,29 @@ function BookingsPage({ bookings = [], customers = [] }) {
         </Box>
       </Card>
 
-      {/* TABLE */}
+      {/* ================= TABLE ================= */}
       <Card sx={{ p: 2 }}>
         <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>Customer</TableCell>
+              <TableCell>Full Name</TableCell>
+              <TableCell>Contact</TableCell>
               <TableCell>Service</TableCell>
-              <TableCell>Days</TableCell>
+              <TableCell>Dates</TableCell>
               <TableCell>Total</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
 
           <TableBody>
-            {bookings.map(b => (
+            {bookings.map((b) => (
               <TableRow key={b.id}>
-                <TableCell>{b.customerName}</TableCell>
+                <TableCell>{b.customerId}</TableCell>
+                <TableCell>{b.fullName}</TableCell>
+                <TableCell>{b.contactNumber}</TableCell>
                 <TableCell>{b.serviceType}</TableCell>
-                <TableCell>{b.days}</TableCell>
+                <TableCell>{b.dateFrom} → {b.dateTo}</TableCell>
                 <TableCell>R {b.totalPrice}</TableCell>
 
                 <TableCell>
@@ -347,26 +415,45 @@ function BookingsPage({ bookings = [], customers = [] }) {
         </Table>
       </Card>
 
-      {/* EDIT */}
+      {/* ================= EDIT ================= */}
       {editing && (
         <Card sx={{ p: 3, mt: 3 }}>
           <Typography mb={2}>Edit Booking</Typography>
 
-          <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={2}>
-            <TextField value={editing.dateFrom}
-              onChange={(e) => setEditing({ ...editing, dateFrom: e.target.value })}
+          <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(200px, 1fr))" gap={2}>
+
+            <TextField
+              value={editing.fullName}
+              onChange={(e) => setEditing({ ...editing, fullName: e.target.value })}
             />
 
-            <TextField value={editing.dateTo}
-              onChange={(e) => setEditing({ ...editing, dateTo: e.target.value })}
+            <TextField
+              value={editing.contactNumber}
+              onChange={(e) => setEditing({ ...editing, contactNumber: e.target.value })}
             />
 
-            <TextField value={editing.price}
+            <TextField
+              value={editing.address}
+              onChange={(e) => setEditing({ ...editing, address: e.target.value })}
+            />
+
+            <TextField
+              value={editing.email}
+              onChange={(e) => setEditing({ ...editing, email: e.target.value })}
+            />
+
+            <TextField
+              value={editing.serviceType}
+              onChange={(e) => setEditing({ ...editing, serviceType: e.target.value })}
+            />
+
+            <TextField
+              value={editing.price}
               onChange={(e) => setEditing({ ...editing, price: e.target.value })}
             />
 
             <Button variant="contained" onClick={updateBooking}>
-              Save
+              Save Changes
             </Button>
           </Box>
         </Card>
@@ -374,7 +461,6 @@ function BookingsPage({ bookings = [], customers = [] }) {
     </Box>
   );
 }
-
 /* ================= LAYOUT ================= */
 function Layout({ children, handleLogout }) {
   const navigate = useNavigate();
